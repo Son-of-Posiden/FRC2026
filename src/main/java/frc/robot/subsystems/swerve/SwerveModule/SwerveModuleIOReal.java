@@ -7,6 +7,7 @@ import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.revrobotics.PersistMode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.ClosedLoopSlot;
 import com.revrobotics.spark.SparkBase;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkClosedLoopController;
@@ -14,6 +15,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.config.EncoderConfig;
+import com.revrobotics.spark.config.FeedForwardConfig;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
@@ -91,12 +93,18 @@ public class SwerveModuleIOReal implements SwerveModuleIO {
             .apply(
                 new ClosedLoopConfig()
                 .pid(SwerveConfig.DRIVE_kP, SwerveConfig.DRIVE_kI, SwerveConfig.DRIVE_kD)
+                .apply(
+                    new FeedForwardConfig()
+                    .kV(SwerveConfig.DRIVE_kV)
+                    .kA(SwerveConfig.DRIVE_kA)
+                    .kS(SwerveConfig.DRIVE_kS)
+                )
             )
             .apply(
                 new EncoderConfig()
                 .positionConversionFactor(SwerveConfig.DRIVE_POSITION_CONVERSION)
                 .velocityConversionFactor(SwerveConfig.DRIVE_VELOCITY_CONVERSION)
-            ), 
+            ),
             ResetMode.kNoResetSafeParameters, 
             PersistMode.kNoPersistParameters
         ); 
@@ -120,6 +128,12 @@ public class SwerveModuleIOReal implements SwerveModuleIO {
                     SwerveConfig.ANGLE_kP, 
                     SwerveConfig.ANGLE_kI,
                     SwerveConfig.ANGLE_kD
+                )
+                .apply(
+                    new FeedForwardConfig()
+                    .kV(SwerveConfig.DRIVE_kV)
+                    .kA(SwerveConfig.DRIVE_kA)
+                    .kS(SwerveConfig.DRIVE_kS)
                 )
             ),
             ResetMode.kNoResetSafeParameters,

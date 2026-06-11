@@ -103,10 +103,16 @@ public final class Constants {
         public static final double DRIVE_kP = 0.000215;
         public static final double DRIVE_kI = 0.0;
         public static final double DRIVE_kD = 0.0;
+        public static final double DRIVE_kV = 0.0;
+        public static final double DRIVE_kA = 0.0;
+        public static final double DRIVE_kS = 0.0;
     
         public static final double ANGLE_kP = 5.0;
         public static final double ANGLE_kI = 0.0;
         public static final double ANGLE_kD = 0.0;
+        public static final double ANGLE_kV = 0.0;
+        public static final double ANGLE_kA = 0.0;
+        public static final double ANGLE_kS = 0.0;
 
     }
   
