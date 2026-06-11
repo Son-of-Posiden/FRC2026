@@ -33,7 +33,7 @@ import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.KickerSubsystem;
 import frc.robot.subsystems.SuperStateSubsystem;
 import frc.robot.subsystems.SuperStateSubsystem.FireIntent;
-import frc.robot.subsystems.flywheel.Flywheel;
+import frc.robot.subsystems.flywheel.FlywheelSubsystem;
 import frc.robot.subsystems.swerve.SwerveDrive;
 import frc.robot.subsystems.turret.TurretSubsystem;
 import frc.robot.subsystems.vision.Vision;
@@ -47,7 +47,7 @@ public class RobotContainer {
 
     public IntakeSubsystem intake = new IntakeSubsystem();
     public IndexerSubsystem indexer = new IndexerSubsystem();
-    public final Flywheel flywheel = new Flywheel();
+    public final FlywheelSubsystem flywheel = new FlywheelSubsystem();
     public TurretSubsystem turret = new TurretSubsystem();
     public KickerSubsystem kicker = new KickerSubsystem();
     public Vision vision;

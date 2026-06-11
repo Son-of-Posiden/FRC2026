@@ -25,7 +25,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 
-public class Flywheel extends SubsystemBase {
+public class FlywheelSubsystem extends SubsystemBase {
     private final FlywheelIO io;
     private final FlywheelIOInputsAutoLogged inputs = new FlywheelIOInputsAutoLogged();
 
@@ -49,7 +49,7 @@ public class Flywheel extends SubsystemBase {
     private final SysIdRoutine sysIdRoutine;
 
     /** Creates a new testerSubsystem. */
-    public Flywheel() {
+    public FlywheelSubsystem() {
 
         // SmartDashboard.setDefaultNumber("flywheel target rpm", setpointRpm);
         // SmartDashboard.setDefaultNumber("flywheel kp", kP);
