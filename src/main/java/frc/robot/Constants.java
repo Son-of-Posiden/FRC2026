@@ -20,7 +20,7 @@ public final class Constants {
         public static final int BTN_TOGGLE_TURRET_LOCK = 16;
 
         // Joystick deadband for angle-only control (e.g. rotation stick ring)
-        public static final double ANGLE_JOYSTICK_DEADBAND = 0.35;
+        public static final double ANGLE_JOYSTICK_DEADBAND = 0.5;
         public static final double Y_DEADBAND = 0.2;
     
         // PID values for heading hold (used for snapping or rotating to angle)
@@ -88,7 +88,7 @@ public final class Constants {
     
         // used to adjust auto drive distance
         // multiply by wheel diameter to fudge from tuning steps
-        public static final double fudge = 1.0;
+        public static final double fudge = 0.9657;
 
         // Wheel diameter in meters (4 inch wheel)
         public static final double WHEEL_DIAMETER_METERS = 0.10198 * fudge; // was 4 inches
@@ -114,7 +114,7 @@ public final class Constants {
         public static final double ANGLE_RAMP = 0.0;
     
         // Feedforward gains
-        public static final double DRIVE_kS = 0.22912; 
+        public static final double DRIVE_kS = 0.0; //0.22912; 
         public static final double DRIVE_kV = 2.7; //2.3797;
         public static final double DRIVE_kA = 20.0; //0.8; //10.0; //0.6; //0.52815; //0.75; 
 

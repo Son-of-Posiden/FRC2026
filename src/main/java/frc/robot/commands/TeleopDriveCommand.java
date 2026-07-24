@@ -30,6 +30,8 @@ public class TeleopDriveCommand extends Command {
     private double speedModifier = 1.0;
     private double rotationModifier = 1.0;
 
+    private int timer = 0;
+
     public TeleopDriveCommand(
         SwerveDrive swerve, 
         DoubleSupplier vX, 
@@ -71,13 +73,25 @@ public class TeleopDriveCommand extends Command {
             );
         } else {
             if (xVelocity == 0.0 && yVelocity == 0.0 && angVelocity == 0.0) {
-                swerve.lockWheels();
+                if (timer > 10) {
+                    swerve.lockWheels();
+                } else {
+                    //Ensures that drive is actually set to zero when it's locked, not something low, due to how the loop runs
+                    swerve.drive(
+                    0.0,
+                    0.0,
+                    0.0
+                    );
+                }
+                
+                timer++;
             } else {
                 swerve.drive(
                 xVelocity * maxSwerveVelocity * speedModifier,
-                yVelocity * maxSwerveVelocity * speedModifier * 0.0, //testing
+                yVelocity * maxSwerveVelocity * speedModifier, //testing
                 angVelocity * maxSwerveAngularVelocity * rotationModifier 
-            );
+                );
+                timer = 0;
             }
             
         }
