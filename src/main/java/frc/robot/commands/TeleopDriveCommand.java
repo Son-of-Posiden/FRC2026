@@ -75,8 +75,8 @@ public class TeleopDriveCommand extends Command {
             } else {
                 swerve.drive(
                 xVelocity * maxSwerveVelocity * speedModifier,
-                yVelocity * maxSwerveVelocity * speedModifier,
-                angVelocity * maxSwerveAngularVelocity * rotationModifier
+                yVelocity * maxSwerveVelocity * speedModifier * 0.0, //testing
+                angVelocity * maxSwerveAngularVelocity * rotationModifier 
             );
             }
             

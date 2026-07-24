@@ -137,7 +137,7 @@ public final class Constants {
         0.00027
          */
     
-        public static final double ANGLE_kP = 5.0;
+        public static final double ANGLE_kP = 3.0;
         public static final double ANGLE_kI = 0.0;
         public static final double ANGLE_kD = 0.0;
 
@@ -152,7 +152,7 @@ public final class Constants {
             "rio",
             true,
             true,
-            Rotation2d.fromDegrees(204.79), // degrees
+            Rotation2d.fromDegrees(203.86), // degrees
             new Translation2d(SwerveConfig.WHEEL_BASE / 2.0, SwerveConfig.TRACK_WIDTH / 2.0)
         );
 
@@ -162,7 +162,7 @@ public final class Constants {
             23, 
             "rio",
             true, true,
-            Rotation2d.fromDegrees(191.34),
+            Rotation2d.fromDegrees(190.72),
             new Translation2d(SwerveConfig.WHEEL_BASE / 2.0, -SwerveConfig.TRACK_WIDTH / 2.0)
         );
 
@@ -172,7 +172,7 @@ public final class Constants {
             33,
             "rio",
             true, true,
-            Rotation2d.fromDegrees(50.19),
+            Rotation2d.fromDegrees(47.61),
             new Translation2d(-SwerveConfig.WHEEL_BASE / 2.0, SwerveConfig.TRACK_WIDTH / 2.0)
         );
 
@@ -182,7 +182,7 @@ public final class Constants {
             39,
             "rio",
             true, true,
-            Rotation2d.fromDegrees(352.71),
+            Rotation2d.fromDegrees(352.243),
             new Translation2d(-SwerveConfig.WHEEL_BASE / 2.0, -SwerveConfig.TRACK_WIDTH / 2.0)
         );
     }
