@@ -16,9 +16,17 @@ public class GyroSim implements GyroIO {
 
         inputs.yaw = Rotation2d.fromRadians(((simRotationRateRadiansPerSecond * deltaTimeSecond) + inputs.yaw.getRadians()));
         inputs.yawDegrees =  MathUtil.inputModulus(yaw.getDegrees(), -180.0, 180.0);
+        inputs.yawVelocityRadiansPerSecond = simRotationRateRadiansPerSecond;
 
         yaw = inputs.yaw;
 
+        inputs.gyroIsPowered = true;
+    }
+
+    @Override
+    public void updateInputs(GyroIOInputs inputs) {
+        inputs.yaw = yaw;
+        inputs.yawDegrees = MathUtil.inputModulus(yaw.getDegrees(), -180.0, 180.0);
         inputs.gyroIsPowered = true;
     }
 

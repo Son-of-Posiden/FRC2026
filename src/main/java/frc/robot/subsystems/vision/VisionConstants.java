@@ -14,26 +14,39 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 
 
 public class VisionConstants {
 
-    public static AprilTagFieldLayout aprilTagLayout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
-    //static Path jsonPath = Filesystem.getDeployDirectory().toPath().resolve("Betawolves2026LabField.json");
-    // public static AprilTagFieldLayout aprilTagLayout = setFieldLayout();
-    // private static AprilTagFieldLayout setFieldLayout() {
-    //     AprilTagFieldLayout layout;
-    //     try {
-    //         layout = new AprilTagFieldLayout(jsonPath);
-    //     } catch (IOException ex) {
-    //         layout = AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
-    
-    //         DriverStation.reportError("Unable to open filee: " + jsonPath, ex.getStackTrace());
-    //     }
-    //     return layout;
-    // }
+    // switch to false before competition :)
+    public static final boolean USE_LAB_FIELD = true;
+
+    static Path jsonPath = Filesystem.getDeployDirectory().toPath()
+        .resolve("betawolves-custom-lab").resolve("Betawolves2026LabField.json");
+
+    public static AprilTagFieldLayout aprilTagLayout =
+        USE_LAB_FIELD
+            ? loadLabField()
+            : AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+
+    // alert if custom lab json doesn't load correctly
+    private static final Alert labFieldLoadAlert =
+        new Alert("Lab field layout failed to load — using the OFFICIAL field instead!",
+            AlertType.kError);
+
+    private static AprilTagFieldLayout loadLabField() {
+        try {
+            return new AprilTagFieldLayout(jsonPath);
+        } catch (IOException ex) {
+            labFieldLoadAlert.set(true);
+            DriverStation.reportError("Unable to open file: " + jsonPath, ex.getStackTrace());
+            return AprilTagFieldLayout.loadField(AprilTagFields.kDefaultField);
+        }
+    }
 
     // Camera names, must match names configured on coprocessor
     public static String camera0Name = "camera_0";
@@ -51,9 +64,23 @@ public class VisionConstants {
     public static double maxAmbiguity = 0.2;
     public static double maxZError = 0.75;
 
+    // Vision Trust During Rotation
+    // observations above maxYarRate are rejected outright. 
+    //For MT1: blur + latency.
+    // For MT2: its x/y is computed FROM the heading we feed it, fast spin = bad
+    // Below it, linear std devs are inflated smoothly by yawRateStdDevFactor per rad/s.
+    // Both are first-guess values (tune!).
+    public static double maxYawRateRadPerSec = Math.toRadians(540);
+    public static double yawRateStdDevFactor = 0.5;
+
     // Standard deviation baselines, for 1 meter distance and 1 tag
     // (Adjusted automatically based on distance and # of tags)
     public static double linearStdDevBaseline = 0.1; // Meters
+
+    // MT2 and single-tag headings get infinite std dev in Vision
+    // multi-tag MT1/Photon headings are trusted through distance, tag count and this baseline.
+    // lower it to trust vision heading more
+    // raise it to not truse vision as much (slowly correct gyro)
     public static double angularStdDevBaseline = 0.12; // Radians
 
     // Standard deviation multipliers for each camera
@@ -65,8 +92,5 @@ public class VisionConstants {
             1.0
         };
 
-    // Multipliers to apply for MegaTag 2 observations
-    public static double linearStdDevMegatag2Factor = 0.5; // More stable than full 3D solve
-    public static double angularStdDevMegatag2Factor =
-        Double.POSITIVE_INFINITY; // No rotation data available
+    public static double linearStdDevMegatag2Factor = 0.5;
 }

@@ -10,9 +10,13 @@ import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkMax;
 
+import org.littletonrobotics.junction.Logger;
+
 import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -25,6 +29,10 @@ public class IntakeSubsystem extends SubsystemBase {
   double rollerSpeed, rotatorSpeed, kp, ki, setpoint, motorOutput, intakeEncoderOffset, intakePositionDegrees, maxMotorOutput;
 
   PIDController pid;
+
+  private final Alert rollerMotorAlert = new Alert("Intake roller motor not powered!", AlertType.kError);
+  private final Alert rotatorMotorAlert = new Alert("Intake rotator motor not powered!", AlertType.kError);
+  private final Alert encoderAlert = new Alert("Intake rotator encoder disconnected!", AlertType.kError);
   /** Creates a new testerSubsystem. */
   public IntakeSubsystem() {
     intakeRollerMotor = new SparkMax(15, MotorType.kBrushless);
@@ -52,10 +60,15 @@ public class IntakeSubsystem extends SubsystemBase {
 
     intakePositionDegrees = (encoder.get() - intakeEncoderOffset) * 360;
 
+    // Test mode allows resting the intake above the comp limit for sysid runs
+    double maxRotatorDegree = DriverStation.isTest()
+        ? Constants.Intake.testMaxRotatorDegree
+        : Constants.Intake.maxRotatorDegree;
+
     if (setpoint < Constants.Intake.minRotatorDegree) {
       setpoint = Constants.Intake.minRotatorDegree;
-    } else if (setpoint > Constants.Intake.maxRotatorDegree) {
-      setpoint = Constants.Intake.maxRotatorDegree;
+    } else if (setpoint > maxRotatorDegree) {
+      setpoint = maxRotatorDegree;
     }
 
     rotatorSpeed = pid.calculate(intakePositionDegrees, setpoint);
@@ -65,11 +78,15 @@ public class IntakeSubsystem extends SubsystemBase {
 
     intakeRotatorMotor.set(rotatorSpeed);
 
-    SmartDashboard.putNumber("intakeRollerSpeed", rollerSpeed);
-    SmartDashboard.putNumber("intakeRotatorSpeed", rotatorSpeed);
-    SmartDashboard.putNumber("intakeRotatorAbsoluteEncoderValue", encoder.get());
-    SmartDashboard.putNumber("intakeRotatorAbsoluteEncoderDegree", intakePositionDegrees);
-    SmartDashboard.putNumber("intakeRotatorSetpoint", setpoint);
+    rollerMotorAlert.set(intakeRollerMotor.getBusVoltage() < 6.0);
+    rotatorMotorAlert.set(intakeRotatorMotor.getBusVoltage() < 6.0);
+    encoderAlert.set(!encoder.isConnected());
+
+    Logger.recordOutput("Intake/RollerSpeed", rollerSpeed);
+    Logger.recordOutput("Intake/RotatorSpeed", rotatorSpeed);
+    Logger.recordOutput("Intake/RotatorAbsoluteEncoderValue", encoder.get());
+    Logger.recordOutput("Intake/RotatorAbsoluteEncoderDegrees", intakePositionDegrees);
+    Logger.recordOutput("Intake/RotatorSetpoint", setpoint);
   }
 
   public void setRollerSpeed(double speed) {
@@ -91,5 +108,11 @@ public class IntakeSubsystem extends SubsystemBase {
   public void setState(double setpoint, double rollerSpeed) {
     this.setpoint = setpoint;
     this.rollerSpeed = rollerSpeed;
+  }
+
+  // Hold the rotator wherever it physically is right now, rollers off (sysid)
+  public void holdCurrentPosition() {
+    setpoint = intakePositionDegrees;
+    rollerSpeed = 0.0;
   }
 }

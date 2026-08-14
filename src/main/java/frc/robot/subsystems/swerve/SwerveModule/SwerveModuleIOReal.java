@@ -16,6 +16,7 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.ClosedLoopConfig;
 import com.revrobotics.spark.config.EncoderConfig;
 import com.revrobotics.spark.config.FeedForwardConfig;
+import com.revrobotics.spark.config.SignalsConfig;
 import com.revrobotics.spark.config.SparkBaseConfig;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
@@ -23,6 +24,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.units.measure.Voltage;
 import frc.robot.Constants.SwerveConfig;
 import frc.robot.util.SwerveModuleAngleOptimizer;
 
@@ -46,6 +48,7 @@ public class SwerveModuleIOReal implements SwerveModuleIO {
     private int moduleNumber;
     private Rotation2d angleOffset;
     private Rotation2d currentReferenceAngle;
+    private double lastDesiredMetersPerSecond = 0.0; 
 
     private final SparkMax driveMotor;
     private final SparkMax angleMotor;
@@ -90,9 +93,15 @@ public class SwerveModuleIOReal implements SwerveModuleIO {
                 .inverted(constants.driveInverted)
                 .smartCurrentLimit(SwerveConfig.DRIVE_CURRENT_LIMIT)
                 .openLoopRampRate(SwerveConfig.DRIVE_RAMP)
+                .voltageCompensation(12)
             .apply(
                 new ClosedLoopConfig()
                 .pid(SwerveConfig.DRIVE_kP, SwerveConfig.DRIVE_kI, SwerveConfig.DRIVE_kD)
+                .apply(new FeedForwardConfig()
+                    .kV(SwerveConfig.DRIVE_kV)
+                    .kA(SwerveConfig.DRIVE_kA)
+                    .kS(SwerveConfig.DRIVE_kS)
+                )
                 .apply(
                     new FeedForwardConfig()
                     .kV(SwerveConfig.DRIVE_kV)
@@ -104,6 +113,13 @@ public class SwerveModuleIOReal implements SwerveModuleIO {
                 new EncoderConfig()
                 .positionConversionFactor(SwerveConfig.DRIVE_POSITION_CONVERSION)
                 .velocityConversionFactor(SwerveConfig.DRIVE_VELOCITY_CONVERSION)
+                .uvwMeasurementPeriod(16) // smaller, more accurate but noisier
+                .uvwAverageDepth(2) // smaller, more accurate but noisier
+            )
+            .apply(
+                new SignalsConfig()
+                    .primaryEncoderVelocityPeriodMs(10) // read more often
+            ), 
             ),
             ResetMode.kNoResetSafeParameters, 
             PersistMode.kNoPersistParameters
@@ -129,11 +145,19 @@ public class SwerveModuleIOReal implements SwerveModuleIO {
                     SwerveConfig.ANGLE_kI,
                     SwerveConfig.ANGLE_kD
                 )
-                .apply(
-                    new FeedForwardConfig()
-                    .kV(SwerveConfig.DRIVE_kV)
-                    .kA(SwerveConfig.DRIVE_kA)
-                    .kS(SwerveConfig.DRIVE_kS)
+                //Only for kS, hence the other values are 0.
+                .apply(new FeedForwardConfig()
+                    .kV(0.0)
+                    .kA(0.0)
+                    .kS(SwerveConfig.ANGLE_kS) 
+                )
+                
+                //Only for kS, hence the other values are 0.
+                .apply(new FeedForwardConfig()
+                    .kV(0.0)
+                    .kA(0.0)
+                    .kS(SwerveConfig.ANGLE_kS) 
+                )
                 )
             ),
             ResetMode.kNoResetSafeParameters,
@@ -171,12 +195,6 @@ public class SwerveModuleIOReal implements SwerveModuleIO {
         angleEncoder.setPosition(getAdjustedAbsoluteAngle().getRotations());
     }
 
-    // Returns instantaneous speed and angle
-    // used by driving logic, calculating chassis speed, telemetry
-    // public SwerveModuleState getState() {
-    //     return new SwerveModuleState(driveEncoder.getVelocity(), getRelativeAngle());
-    // }
-
     // Returns total distance driven and angle
     // used by odometry/pose estimation
     public SwerveModulePosition getPosition() {
@@ -188,14 +206,17 @@ public class SwerveModuleIOReal implements SwerveModuleIO {
     public void setDesiredState(SwerveModuleState desired) {
         SwerveModuleState optimizedState = SwerveModuleAngleOptimizer.optimize(desired, getRelativeAngle());
 
+        lastDesiredMetersPerSecond = optimizedState.speedMetersPerSecond;
+
+
         //Velocity in RPM  (convert from m/s if needed)
         //Position in rotations
-        double targetDriveRPM = optimizedState.speedMetersPerSecond / SwerveConfig.DRIVE_VELOCITY_CONVERSION;
         drivePID.setSetpoint(
-            targetDriveRPM, SparkBase.ControlType.kVelocity);
+            optimizedState.speedMetersPerSecond, SparkBase.ControlType.kVelocity);
+
 
         //Prevent rotating module if speed is less than 1%. Prevents Jittering.
-        // Rotation2d angle = (Math.abs(desired.speedMetersPerSecond) <= (Constants.Drivetrain.MAXIMUM_CHASSIS_VELOCITY * 0.01)) ?
+        // Rotation2d angle = (Math.abs(desired.speedMetersPerSecond) <= (Constants.SwerveConfig.MAXIMUM_CHASSIS_VELOCITY * 0.01)) ?
         //     currentReferenceAngle :
         //     desired.angle; 
 
@@ -212,5 +233,34 @@ public class SwerveModuleIOReal implements SwerveModuleIO {
         inputs.absoluteAngleDegrees = getAbsoluteAngle().getDegrees();
         inputs.absoluteAdjustedAngleDegrees = getAdjustedAbsoluteAngle().getDegrees();
         inputs.relativeAngleDegrees = getRelativeAngle().getDegrees();
+        inputs.driveMotorIsPowered = driveMotor.getBusVoltage() > 6.0;
+        inputs.angleMotorIsPowered = angleMotor.getBusVoltage() > 6.0;
+        inputs.absoluteEncoderIsConnected = absoluteEncoder.getAbsolutePosition().getStatus().isOK();
+
+        inputs.desiredMetersPerSecond = lastDesiredMetersPerSecond;
+    }
+
+    @Override
+    public void setDriveMotorVoltage(Voltage voltage) {
+        driveMotor.setVoltage(voltage);
+    }
+
+    @Override
+    public void setAzimuth(Rotation2d angle) {
+        // removes the 180 flip, won't unwind full turns
+        double targetDegrees = SwerveModuleAngleOptimizer.placeInAppropriate0To360Scope(
+            getRelativeAngle().getDegrees(), angle.getDegrees());
+        
+        anglePID.setSetpoint(Rotation2d.fromDegrees(targetDegrees).getRotations(), ControlType.kPosition);
+    }
+
+    @Override
+    public RelativeEncoder getRelativeEncoder() {
+        return driveEncoder;
+    }
+
+    @Override
+    public double getAppliedOutput() {
+        return driveMotor.getAppliedOutput();
     }
 }

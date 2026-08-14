@@ -11,7 +11,10 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import org.littletonrobotics.junction.Logger;
+
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class IndexerSubsystem extends SubsystemBase {
@@ -19,6 +22,8 @@ public class IndexerSubsystem extends SubsystemBase {
 
   SparkMax indexerMotor;
   double speed;
+
+  private final Alert motorAlert = new Alert("Indexer motor not powered!", AlertType.kError);
   /** Creates a new testerSubsystem. */
   public IndexerSubsystem() {
     indexerMotor = new SparkMax(16, MotorType.kBrushless);
@@ -43,7 +48,8 @@ public class IndexerSubsystem extends SubsystemBase {
   public void periodic() {
     // This method will be called once per scheduler run
     indexerMotor.set(speed);
-    SmartDashboard.putNumber("indexerSpeed", speed);
+    Logger.recordOutput("Indexer/Speed", speed);
+    motorAlert.set(indexerMotor.getBusVoltage() < 6.0);
   }
 
   public void setSpeed(double speed) {

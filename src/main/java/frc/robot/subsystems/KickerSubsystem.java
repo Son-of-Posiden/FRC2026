@@ -11,13 +11,18 @@ import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import org.littletonrobotics.junction.Logger;
+
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class KickerSubsystem extends SubsystemBase {
 
     SparkFlex motor;
     double speed = 0.0;
+
+    private final Alert motorAlert = new Alert("Kicker motor not powered!", AlertType.kError);
 
     public KickerSubsystem() {
         motor = new SparkFlex(26, MotorType.kBrushless);
@@ -38,7 +43,8 @@ public class KickerSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         motor.set(speed);
-        SmartDashboard.putNumber("kickerSpeed", speed);
+        Logger.recordOutput("Kicker/Speed", speed);
+        motorAlert.set(motor.getBusVoltage() < 6.0);
     }
 
     public void setSpeed(double speed) {

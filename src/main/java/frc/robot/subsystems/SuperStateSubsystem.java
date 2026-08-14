@@ -13,7 +13,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import frc.robot.util.AllianceUtil;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
@@ -24,7 +24,6 @@ import frc.robot.services.TurretService;
 public class SuperStateSubsystem extends SubsystemBase {
   /** Creates a new NewSuperStateSubsystem. */
   public SuperStateSubsystem() {
-    SmartDashboard.setDefaultNumber("ballSpeedConstant", 1);
   }
 
   // instantiate logic services
@@ -48,9 +47,9 @@ public class SuperStateSubsystem extends SubsystemBase {
 
   private double phaseSeconds = 0.0;
   private boolean phaseState = false;
-    public boolean isTurretLocked = false;
+    public boolean isTurretLocked, isWheelsLocked = false;
 
-  private final double flywheelIdleRPM = 500;
+  private final double flywheelIdleRPM = 0;
 
   private int clearTimer, rotatorTimer = 0;
 
@@ -74,6 +73,7 @@ public class SuperStateSubsystem extends SubsystemBase {
       flywheelSetpointRpm = 0.0; 
     } else if( fireIntent == FireIntent.IDLE) {
       flywheelSetpointRpm = flywheelIdleRPM;
+      intakeRotatorSetpoint = Constants.Intake.maxRotatorDegree;
     } else if (fireIntent == FireIntent.CLEAR) {
       kickerSpeed = -0.8;
       indexerSpeed = -1.0;
@@ -97,70 +97,51 @@ public class SuperStateSubsystem extends SubsystemBase {
   // run on a loop to keep variables hydrated
     public void updateValues(Supplier<Pose2d> robotPose, Supplier<ChassisSpeeds> fieldRelativeChassisSpeeds, Supplier<Boolean> flywheelIsAtSetpoint, Supplier<Boolean> turretIsAtSetpoint) {       
         fieldTargetPose = fieldService.getTargetPose(robotPose.get());
-        Logger.recordOutput("Superstate/FieldTargetPose", fieldTargetPose);
+        Logger.recordOutput("SuperState/FieldTargetPose", fieldTargetPose);
         adjustedTargetPose = fieldService.getAdjustedTargetPose(robotPose.get(), fieldTargetPose, fieldRelativeChassisSpeeds.get());
         if (isTurretLocked) {
             turretSetpointRadians = 0.0;
         } else {
-            turretSetpointRadians = turretService.getSetpointRadians(robotPose.get(), adjustedTargetPose);
+            turretSetpointRadians = 0.0; //turretService.getSetpointRadians(robotPose.get(), adjustedTargetPose);
         }
         distanceToTarget = fieldService.getDistanceFromTurretToTarget(robotPose.get(), adjustedTargetPose);
 
-        SmartDashboard.putNumber("distanceToTarget", fieldService.getDistanceToTarget(robotPose.get(), fieldTargetPose));
-        SmartDashboard.putNumber("distanceFromTurretToTarget", distanceToTarget);
+        Logger.recordOutput("SuperState/DistanceToTarget", robotPose.get().getTranslation().getDistance(fieldTargetPose));
+        Logger.recordOutput("SuperState/DistanceFromTurretToTarget", distanceToTarget);
         
         Logger.recordOutput("SuperState/AdjustedTarget", new Pose2d(adjustedTargetPose, new Rotation2d()));
 
-        //Make a timer on Smartdashboard for the phases
-        if (!(DriverStation.getGameSpecificMessage() == null)) {
-            double stationTime = DriverStation.getMatchTime();
-
-            if (
-                (!(DriverStation.getGameSpecificMessage() == "R" && DriverStation.getAlliance().get() == Alliance.Red)) ||
-                (!(DriverStation.getGameSpecificMessage() == "B" && DriverStation.getAlliance().get() == Alliance.Blue))
-            ) {
-                if (stationTime >= 130) {
-                    phaseSeconds = stationTime - 130;
-                    phaseState = true;
-                } else if(stationTime >= 105) {
-                    phaseSeconds = stationTime - 105;
-                    phaseState = false;
-                } else if(stationTime >= 80) {
-                    phaseSeconds = stationTime - 80;
-                    phaseState = true;
-                } else if(stationTime >= 55) {
-                    phaseSeconds = stationTime - 55;
-                    phaseState = false;
-                } else if(stationTime >= 30) {
-                    phaseSeconds = stationTime - 30;
-                    phaseState = true;
-                } else if(stationTime < 30) {
-                    phaseSeconds = stationTime;
-                    phaseState = true;
-                }
-            } else {
-                if (stationTime >= 130) {
-                    phaseSeconds = stationTime - 130;
-                    phaseState = false;
-                } else if(stationTime >= 105) {
-                    phaseSeconds = stationTime - 105;
-                    phaseState = true;
-                } else if(stationTime >= 80) {
-                    phaseSeconds = stationTime - 80;
-                    phaseState = false;
-                } else if(stationTime >= 55) {
-                    phaseSeconds = stationTime - 55;
-                    phaseState = true;
-                } else if(stationTime >= 30) {
-                    phaseSeconds = stationTime - 30;
-                    phaseState = false;
-                } else if(stationTime < 30) {
-                    phaseSeconds = stationTime;
-                    phaseState = true;
-                }
-            }
-        }
         
+        String phaseMessage = DriverStation.getGameSpecificMessage();
+        boolean isOurPhase = ("R".equals(phaseMessage) && AllianceUtil.isRed())
+                          || ("B".equals(phaseMessage) && !AllianceUtil.isRed());
+
+        double stationTime = DriverStation.getMatchTime();
+
+        // Seconds into the current phase window, and the base on/off pattern
+        if (stationTime >= 130) {
+            phaseSeconds = stationTime - 130;
+            phaseState = true;
+        } else if (stationTime >= 105) {
+            phaseSeconds = stationTime - 105;
+            phaseState = false;
+        } else if (stationTime >= 80) {
+            phaseSeconds = stationTime - 80;
+            phaseState = true;
+        } else if (stationTime >= 55) {
+            phaseSeconds = stationTime - 55;
+            phaseState = false;
+        } else if (stationTime >= 30) {
+            phaseSeconds = stationTime - 30;
+            phaseState = true;
+        } else {
+            phaseSeconds = stationTime;
+            phaseState = true;
+        }
+
+        if (isOurPhase && stationTime >= 30) {
+            phaseState = !phaseState;
+        }        
         SmartDashboard.putNumber("Phase Seconds", phaseSeconds);
         SmartDashboard.putBoolean("Phase State", phaseState);
 
@@ -224,9 +205,6 @@ public class SuperStateSubsystem extends SubsystemBase {
   public Translation2d getAdjustedTargetPose() {
       return adjustedTargetPose;
   }
-  public double getDistanceToTarget() {
-      return distanceToTarget;
-  }
   public double getIntakeSpeed() {
       return intakeSpeed;
   }
@@ -245,5 +223,16 @@ public class SuperStateSubsystem extends SubsystemBase {
       } else {
           isTurretLocked = true;
       }
+  }
+  //Only works in test mode, locks forward.
+  public void toggleTestingWheelLock() {
+    if (isWheelsLocked) {
+          isWheelsLocked = false;
+      } else {
+          isWheelsLocked = true;
+      }
+  }
+  public boolean getTestingWheelsLocked() {
+    return isWheelsLocked;
   }
 }

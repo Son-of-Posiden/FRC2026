@@ -7,22 +7,21 @@ import frc.robot.subsystems.swerve.SwerveModule.SwerveModuleConstants;
 
 public final class Constants {
 
-    public static final class Drivetrain {
-        // Physical robot dimensions (meters)
-        public static final double TRACK_WIDTH = Units.inchesToMeters(21.75);
-        public static final double WHEEL_BASE = Units.inchesToMeters(22.75);
-
-        // Gyro
-        public static final int GYRO_ID = 9;
-        public static final String GYRO_CAN_BUS_NAME = "rio";
-
-        public static final double MAXIMUM_CHASSIS_VELOCITY = 3.75; // m/s
-        public static final double MAXIMUM_CHASSIS_ANGULAR_VELOCITY = 3.75; // radians/s
-    }
-
     public static final class Controls {
+        // Driver joystick button map — the single source of truth for what's bound.
+        // Check here before claiming a button in any file.
+        public static final int BTN_FIRE_AND_INTAKE = 1;
+        public static final int BTN_FIRE = 2;
+        public static final int BTN_INTAKE = 3;
+        public static final int BTN_SPIT = 4;
+        public static final int BTN_SYSID_RUN = 5;
+        public static final int BTN_TEST_MODE_WHEEL_LOCK = 8;
+        public static final int BTN_LOCK_WHEELS = 14;
+        public static final int BTN_RESET_GYRO = 15;
+        public static final int BTN_TOGGLE_TURRET_LOCK = 16;
+
         // Joystick deadband for angle-only control (e.g. rotation stick ring)
-        public static final double ANGLE_JOYSTICK_DEADBAND = 0.35;
+        public static final double ANGLE_JOYSTICK_DEADBAND = 0.6;
         public static final double Y_DEADBAND = 0.2;
     
         // PID values for heading hold (used for snapping or rotating to angle)
@@ -56,6 +55,10 @@ public final class Constants {
 
         public static final double minRotatorDegree = 0.0;
         public static final double maxRotatorDegree = 80; //83.25; //68.8;
+
+        // Test mode only: allows the intake to rest above the bot (past the comp
+        // limit) during sysid runs. Measure the actual resting angle and adjust.
+        public static final double testMaxRotatorDegree = 110;
     }
 
     public static final class Field {
@@ -68,16 +71,28 @@ public final class Constants {
     }
 
     public static final class SwerveConfig {
+
+        // Physical robot dimensions (meters)
+        public static final double TRACK_WIDTH = Units.inchesToMeters(21.75);
+        public static final double WHEEL_BASE = Units.inchesToMeters(22.75);
+
+        // Gyro
+        public static final int GYRO_ID = 9;
+        public static final String GYRO_CAN_BUS_NAME = "rio";
+
+        public static final double MAXIMUM_CHASSIS_VELOCITY = 3.75; // m/s
+        public static final double MAXIMUM_CHASSIS_ANGULAR_VELOCITY = (4.0); // radians/s
+        
         // Gearing
         public static final double DRIVE_GEAR_RATIO = 6.75;
         public static final double ANGLE_GEAR_RATIO = 21.4285714286;
     
         // used to adjust auto drive distance
         // multiply by wheel diameter to fudge from tuning steps
-        public static final double fudge = 0.983;
+        public static final double fudge = 0.9657;
 
         // Wheel diameter in meters (4 inch wheel)
-        public static final double WHEEL_DIAMETER_METERS = 0.1016 * fudge; // 4 inches
+        public static final double WHEEL_DIAMETER_METERS = 0.10198 * fudge; // was 4 inches
 
         public static final double WHEEL_CIRCUMFRENCE_METERS = WHEEL_DIAMETER_METERS * Math.PI;
     
@@ -86,33 +101,47 @@ public final class Constants {
         public static final double FREE_SPEED_RPS = NEO_FREE_SPEED / 60;
         public static final double DRIVE_FREE_SPEED_RPS = (FREE_SPEED_RPS * WHEEL_CIRCUMFRENCE_METERS) / DRIVE_GEAR_RATIO;
 
-        public static final double DRIVE_POSITION_CONVERSION = WHEEL_CIRCUMFRENCE_METERS / DRIVE_GEAR_RATIO; // meters/rev
-        public static final double DRIVE_VELOCITY_CONVERSION = DRIVE_POSITION_CONVERSION / 60.0; // m/s per RPM
+        public static final double DRIVE_POSITION_CONVERSION = WHEEL_CIRCUMFRENCE_METERS / DRIVE_GEAR_RATIO; // meters
+        public static final double DRIVE_VELOCITY_CONVERSION = DRIVE_POSITION_CONVERSION / 60.0; // meters per second
     
-        public static final double ANGLE_POSITION_CONVERSION = 1 / ANGLE_GEAR_RATIO; // motor revolutions per 1 swerve module rotation
+        public static final double ANGLE_POSITION_CONVERSION = 1 / ANGLE_GEAR_RATIO; // motor rotations per 1 swerve module rotation
     
         // Current limits
         public static final int DRIVE_CURRENT_LIMIT = 40;
         public static final int ANGLE_CURRENT_LIMIT = 20;
     
-        // Ramp rates
-        public static final double DRIVE_RAMP = 0.25; // seconds to full throttle
-        public static final double ANGLE_RAMP = 0.25;
+        // Ramp rates - saves current from drawing instant power
+        public static final double DRIVE_RAMP = 0.0; // seconds to full throttle
+        public static final double ANGLE_RAMP = 0.0;
     
-        // PID (from JSON)
-        public static final double DRIVE_kP = 0.000215;
+        // Feedforward gains
+        public static final double DRIVE_kS = 0.0; //0.22912; 
+        public static final double DRIVE_kV = 2.7; //2.3797;
+        public static final double DRIVE_kA = 20.0; //0.8; //10.0; //0.6; //0.52815; //0.75; 
+
+        // Feedback gains
+        public static final double DRIVE_kP = 0.02; //0.00027912; //0.4; 
         public static final double DRIVE_kI = 0.0;
         public static final double DRIVE_kD = 0.0;
-        public static final double DRIVE_kV = 0.0;
-        public static final double DRIVE_kA = 0.0;
-        public static final double DRIVE_kS = 0.0;
+
+        /*
+        On Blocks
+        0.09
+        2.5
+        0.24
+        9.9662E-05
+
+        Loaded
+        0.778
+        2.16
+        0.6
+        0.00027
+         */
     
-        public static final double ANGLE_kP = 5.0;
-        public static final double ANGLE_kI = 0.0;
+        public static final double ANGLE_kP = 5.5;
+        public static final double ANGLE_kI = 0.0; //For Some reason kI doesn't work, as it causes strange lagging in one wheel at a time
         public static final double ANGLE_kD = 0.0;
-        public static final double ANGLE_kV = 0.0;
-        public static final double ANGLE_kA = 0.0;
-        public static final double ANGLE_kS = 0.0;
+        public static final double ANGLE_kS = 0.3; //0.405 works but noisy, 0.2 has a degree off. kS is how it reaches its goal without kI. Effective friction isn't constant, but close.
 
     }
   
@@ -125,8 +154,8 @@ public final class Constants {
             "rio",
             true,
             true,
-            Rotation2d.fromDegrees(204.79), // degrees
-            new Translation2d(Drivetrain.WHEEL_BASE / 2.0, Drivetrain.TRACK_WIDTH / 2.0)
+            Rotation2d.fromDegrees(203.86), // degrees
+            new Translation2d(SwerveConfig.WHEEL_BASE / 2.0, SwerveConfig.TRACK_WIDTH / 2.0)
         );
 
         public static final SwerveModuleConstants FRONT_RIGHT = new SwerveModuleConstants(
@@ -135,8 +164,8 @@ public final class Constants {
             23, 
             "rio",
             true, true,
-            Rotation2d.fromDegrees(191.34),
-            new Translation2d(Drivetrain.WHEEL_BASE / 2.0, -Drivetrain.TRACK_WIDTH / 2.0)
+            Rotation2d.fromDegrees(190.72),
+            new Translation2d(SwerveConfig.WHEEL_BASE / 2.0, -SwerveConfig.TRACK_WIDTH / 2.0)
         );
 
         public static final SwerveModuleConstants BACK_LEFT = new SwerveModuleConstants(
@@ -145,8 +174,8 @@ public final class Constants {
             33,
             "rio",
             true, true,
-            Rotation2d.fromDegrees(50.19),
-            new Translation2d(-Drivetrain.WHEEL_BASE / 2.0, Drivetrain.TRACK_WIDTH / 2.0)
+            Rotation2d.fromDegrees(47.61),
+            new Translation2d(-SwerveConfig.WHEEL_BASE / 2.0, SwerveConfig.TRACK_WIDTH / 2.0)
         );
 
         public static final SwerveModuleConstants BACK_RIGHT = new SwerveModuleConstants(
@@ -155,8 +184,8 @@ public final class Constants {
             39,
             "rio",
             true, true,
-            Rotation2d.fromDegrees(352.71),
-            new Translation2d(-Drivetrain.WHEEL_BASE / 2.0, -Drivetrain.TRACK_WIDTH / 2.0)
+            Rotation2d.fromDegrees(352.243),
+            new Translation2d(-SwerveConfig.WHEEL_BASE / 2.0, -SwerveConfig.TRACK_WIDTH / 2.0)
         );
     }
 }

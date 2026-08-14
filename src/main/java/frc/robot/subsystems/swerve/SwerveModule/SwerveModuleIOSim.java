@@ -1,7 +1,10 @@
 package frc.robot.subsystems.swerve.SwerveModule;
 
+import com.revrobotics.RelativeEncoder;
+
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.units.measure.Voltage;
 
 public class SwerveModuleIOSim implements SwerveModuleIO {
     private double simDrivePositionMeters = 0.0;
@@ -29,6 +32,11 @@ public class SwerveModuleIOSim implements SwerveModuleIO {
         inputs.driveVelocityMetersPerSecond = simDriveVelocityMps;
         inputs.turnAngleRotations = simAngle.getRotations();
         inputs.absoluteAngleDegrees = simAbsoluteAngle.getDegrees();
+        inputs.driveMotorIsPowered = true;
+        inputs.angleMotorIsPowered = true;
+        inputs.absoluteEncoderIsConnected = true;
+
+        inputs.desiredMetersPerSecond = simDriveVelocityMps;
     }
 
     @Override
@@ -51,5 +59,29 @@ public class SwerveModuleIOSim implements SwerveModuleIO {
         simAbsoluteAngle = new Rotation2d(
             simAngle.getRadians() + Math.toRadians(constants.angleOffset.getDegrees())
         );
+    }
+
+    @Override
+    public void setDriveMotorVoltage(Voltage voltage) {
+        
+    }
+
+    @Override
+    public RelativeEncoder getRelativeEncoder() {
+        return null;
+    }
+
+    @Override
+    public double getAppliedOutput() {
+        return 1;
+    }
+
+    @Override 
+    public void setAzimuth(Rotation2d angle) {
+        
+    }
+
+    public Rotation2d getAdjustedAbsoluteAngle() {
+        return simAbsoluteAngle;
     }
 }

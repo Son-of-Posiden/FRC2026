@@ -13,8 +13,6 @@ import static frc.robot.subsystems.vision.VisionConstants.robotToCamera1;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
-import edu.wpi.first.math.MathUtil;
-import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -26,7 +24,6 @@ import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.RunCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.TeleopDriveCommand;
 import frc.robot.subsystems.IndexerSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
@@ -63,6 +60,8 @@ public class RobotContainer {
             vision =
             new Vision(
                 swerveDrive::addVisionMeasurement,
+                swerveDrive::seedHeading,
+                swerveDrive::getYawVelocityRadiansPerSecond,
                 new VisionIOPhotonVision(camera0Name, robotToCamera0),
                 new VisionIOPhotonVision(camera1Name, robotToCamera1),
                 new VisionIOLimelight(camera2Name, swerveDrive::getHeading)
@@ -71,6 +70,8 @@ public class RobotContainer {
             vision =
             new Vision(
                 swerveDrive::addVisionMeasurement,
+                swerveDrive::seedHeading,
+                swerveDrive::getYawVelocityRadiansPerSecond,
                 new VisionIOPhotonVisionSim(camera0Name, robotToCamera0, swerveDrive::getPose),
                 new VisionIOPhotonVisionSim(camera1Name, robotToCamera1, swerveDrive::getPose),
                 new VisionIOLimelight(camera2Name, swerveDrive::getHeading));
@@ -114,27 +115,15 @@ public class RobotContainer {
             }, intake)
         );
 
-        if (DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
-            swerveDrive.setDefaultCommand(
-                new TeleopDriveCommand(
-                    swerveDrive,
-                    ()-> (MathUtil.applyDeadband(driverJoyStick.getY(), Constants.Controls.Y_DEADBAND)),
-                    ()-> (MathUtil.applyDeadband(driverJoyStick.getX(), Constants.Controls.Y_DEADBAND)),
-                    ()-> -(MathUtil.applyDeadband(driverJoyStick.getTwist(), Constants.Controls.ANGLE_JOYSTICK_DEADBAND)),
-                    superState
-                )
-            );
-        } else {
-            swerveDrive.setDefaultCommand(
-                new TeleopDriveCommand(
-                    swerveDrive,
-                    ()-> -(MathUtil.applyDeadband(driverJoyStick.getY(), Constants.Controls.Y_DEADBAND)),
-                    ()-> -(MathUtil.applyDeadband(driverJoyStick.getX(), Constants.Controls.Y_DEADBAND)),
-                    ()-> -(MathUtil.applyDeadband(driverJoyStick.getTwist(), Constants.Controls.ANGLE_JOYSTICK_DEADBAND)),
-                    superState
-                )
-            );
-        }
+        swerveDrive.setDefaultCommand(
+            new TeleopDriveCommand(
+                swerveDrive,
+                driverJoyStick::getY,
+                driverJoyStick::getX,
+                driverJoyStick::getZ,
+                superState
+            )
+        );
 
         //NamedCommands.registerCommand("setToStop", new InstantCommand(()->superState.setFireIntent(FireIntent.STOP)));
         NamedCommands.registerCommand("setToIdle", new InstantCommand(()->superState.setFireIntent(FireIntent.IDLE)));
@@ -165,21 +154,20 @@ public class RobotContainer {
         configureBindings();
         autoChooser = AutoBuilder.buildAutoChooser();
 
-        printDebugValues();
         SmartDashboard.putData("Auto Chooser", autoChooser);
     }
 
     private void configureBindings() {
-        // Intake In and Out 
-        new JoystickButton(driverJoyStick, 3).onTrue(
+        // Intake In and Out
+        new JoystickButton(driverJoyStick, Constants.Controls.BTN_INTAKE).onTrue(
              new InstantCommand(()-> superState.setFireIntent(FireIntent.INTAKE))
         ).onFalse(new InstantCommand(()-> superState.setFireIntent(FireIntent.IDLE)));
-        new JoystickButton(driverJoyStick, 4).onTrue(
+        new JoystickButton(driverJoyStick, Constants.Controls.BTN_SPIT).onTrue(
              new InstantCommand(()-> superState.setFireIntent(FireIntent.SPIT))
         ).onFalse(new InstantCommand(()-> superState.setFireIntent(FireIntent.IDLE)));
 
         // SHOOT + Intake! - Kicker and Flywheel and Intake
-        new JoystickButton(driverJoyStick, 1).onTrue(
+        new JoystickButton(driverJoyStick, Constants.Controls.BTN_FIRE_AND_INTAKE).onTrue(
             new InstantCommand(()->superState.setFireIntent(SuperStateSubsystem.FireIntent.FIREANDINTAKE))
         ).
         onFalse(
@@ -187,7 +175,7 @@ public class RobotContainer {
         );
 
         // SHOOT + Jostle! - Kicker and Flywheel and Intake Rotator Jostle
-        new JoystickButton(driverJoyStick, 2).onTrue(
+        new JoystickButton(driverJoyStick, Constants.Controls.BTN_FIRE).onTrue(
             new InstantCommand(()->superState.setFireIntent(SuperStateSubsystem.FireIntent.FIRE))
         ).
         onFalse(
@@ -195,53 +183,25 @@ public class RobotContainer {
         );
         
         //ResetGyro
-        new JoystickButton(driverJoyStick, 15).onTrue(
+        new JoystickButton(driverJoyStick, Constants.Controls.BTN_RESET_GYRO).onTrue(
             new InstantCommand(()-> swerveDrive.setYaw(0))
         );
 
-        new JoystickButton(driverJoyStick, 16).onTrue(
+        new JoystickButton(driverJoyStick, Constants.Controls.BTN_TOGGLE_TURRET_LOCK).onTrue(
             new InstantCommand(()-> superState.toggleTurretLock())
         );
-         
-        /*
-        // Turret CW
-        new JoystickButton(driverJoyStick, 10).whileTrue(
-            new RunCommand(()-> turret.incrementOffset(0.25), turret)
-        );
-        // Turret CCW
-        new JoystickButton(driverJoyStick, 5).whileTrue(
-            new RunCommand(()-> turret.incrementOffset(-0.25), turret)
-        );
-          */
-
         
-        new JoystickButton(driverJoyStick, 14).whileTrue(
+        new JoystickButton(driverJoyStick, Constants.Controls.BTN_LOCK_WHEELS).whileTrue(
             new RunCommand(()-> swerveDrive.lockWheels(), swerveDrive)
         );
 
-        
-        new JoystickButton(driverJoyStick, 5).whileTrue(
-            flywheel.sysIdQuasistatic(SysIdRoutine.Direction.kForward)
+        //Only Works in Test Mode, locks forward.
+        new JoystickButton(driverJoyStick, Constants.Controls.BTN_TEST_MODE_WHEEL_LOCK).whileTrue(
+            new RunCommand(()-> superState.toggleTestingWheelLock(), swerveDrive)
         );
-        new JoystickButton(driverJoyStick, 6).whileTrue(
-            flywheel.sysIdQuasistatic(SysIdRoutine.Direction.kReverse)
-        );
-        new JoystickButton(driverJoyStick, 10).whileTrue(
-            flywheel.sysIdDynamic(SysIdRoutine.Direction.kForward)
-        );
-        new JoystickButton(driverJoyStick, 9).whileTrue(
-            flywheel.sysIdDynamic(SysIdRoutine.Direction.kReverse)
-        );
-        
-    }
 
-    private void printDebugValues() {
-        // add smart dashboard debug calls here instead of in subsystems
-
-        //double[] adjustedTargetArray = {superState.getAdjustedTargetPose().getX(), superState.getAdjustedTargetPose().getY()};
-        //SmartDashboard.putNumberArray("Adjusted Target Position Meters", adjustedTargetArray);
-        //SmartDashboard.putNumber("Distance to Target", superState.getDistanceToTarget());
-
+        // SysId characterization routines
+        new SysIdBindings(driverJoyStick, swerveDrive, flywheel, intake);
     }
 
     public Command getAutonomousCommand() {
