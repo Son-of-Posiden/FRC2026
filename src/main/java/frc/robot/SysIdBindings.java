@@ -9,7 +9,7 @@ import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.IntakeSubsystem;
-import frc.robot.subsystems.flywheel.Flywheel;
+import frc.robot.subsystems.flywheel.FlywheelSubsystem;
 import frc.robot.subsystems.swerve.SwerveDrive;
 
 /**
@@ -21,7 +21,7 @@ public class SysIdBindings {
 
     private final SendableChooser<Command> sysIdChooser = new SendableChooser<>();
 
-    public SysIdBindings(Joystick joystick, SwerveDrive swerveDrive, Flywheel flywheel, IntakeSubsystem intake) {
+    public SysIdBindings(Joystick joystick, SwerveDrive swerveDrive, FlywheelSubsystem flywheel, IntakeSubsystem intake) {
         Trigger test = RobotModeTriggers.test();
 
         // In test mode the intake holds wherever it physically is — this command owns

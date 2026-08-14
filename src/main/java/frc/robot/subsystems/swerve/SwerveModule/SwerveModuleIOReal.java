@@ -120,7 +120,6 @@ public class SwerveModuleIOReal implements SwerveModuleIO {
                 new SignalsConfig()
                     .primaryEncoderVelocityPeriodMs(10) // read more often
             ), 
-            ),
             ResetMode.kNoResetSafeParameters, 
             PersistMode.kNoPersistParameters
         ); 
@@ -157,7 +156,6 @@ public class SwerveModuleIOReal implements SwerveModuleIO {
                     .kV(0.0)
                     .kA(0.0)
                     .kS(SwerveConfig.ANGLE_kS) 
-                )
                 )
             ),
             ResetMode.kNoResetSafeParameters,

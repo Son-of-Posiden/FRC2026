@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.flywheel.SysId.FlywheelSysId;
 
 public class FlywheelSubsystem extends SubsystemBase {
@@ -30,8 +31,6 @@ public class FlywheelSubsystem extends SubsystemBase {
     private final Alert motor1Alert = new Alert("Flywheel motor 1 not powered!", AlertType.kError);
     private final Alert motor2Alert = new Alert("Flywheel motor 2 not powered!", AlertType.kError);
 
-    private final SysIdRoutine sysIdRoutine;
-
     /** Creates a new testerSubsystem. */
     public FlywheelSubsystem() {
 
@@ -39,6 +38,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         // SmartDashboard.setDefaultNumber("flywheel kp", kP);
         // SmartDashboard.setDefaultNumber("flywheel kv", kV);
         // SmartDashboard.setDefaultNumber("flywheel ks", kS);
+
 
         if (RobotBase.isSimulation()) {
             io = new FlywheelIOSim();

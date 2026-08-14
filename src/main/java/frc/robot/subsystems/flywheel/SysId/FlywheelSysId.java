@@ -14,8 +14,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.subsystems.flywheel.Flywheel;
 import frc.robot.subsystems.flywheel.FlywheelIO;
+import frc.robot.subsystems.flywheel.FlywheelSubsystem;
 
 public class FlywheelSysId {
 
@@ -27,7 +27,7 @@ public class FlywheelSysId {
     private final FlywheelIO io;
     private final SysIdRoutine routine;
 
-    public FlywheelSysId(Flywheel flywheel, FlywheelIO io) {
+    public FlywheelSysId(FlywheelSubsystem flywheel, FlywheelIO io) {
         this.io = io;
         routine = new SysIdRoutine(
             new SysIdRoutine.Config(
