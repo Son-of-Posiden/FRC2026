@@ -183,6 +183,16 @@ public class SwerveDrive extends SubsystemBase {
         setModuleStates(desiredStates);
     }
 
+    public void lockWheelsForward() {
+        SwerveModuleState[] desiredStates = new SwerveModuleState[] {
+            new SwerveModuleState(0.0, Rotation2d.fromDegrees(0)),   // FL
+            new SwerveModuleState(0.0, Rotation2d.fromDegrees(0)),  // FR
+            new SwerveModuleState(0.0, Rotation2d.fromDegrees(0)),  // BL
+            new SwerveModuleState(0.0, Rotation2d.fromDegrees(0))    // BR
+        };
+        setModuleStates(desiredStates);
+    }
+
     // send the values to the pods
     public void setModuleStates(SwerveModuleState[] desiredStates) {
         for (int i = 0; i < modules.length; i++) {
@@ -210,6 +220,8 @@ public class SwerveDrive extends SubsystemBase {
         // update the swerve modules!
         for (int i = 0; i < modules.length; i++) {
             modules[i].updateInputs();
+            
+            Logger.recordOutput("Swerve/EncoderAngle Module " + i, modules[i].getAdjustedAbsoluteAngle());
         }
 
         // For AdvantageScope Module Tuning

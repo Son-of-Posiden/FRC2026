@@ -137,6 +137,13 @@ public class SwerveModuleIOReal implements SwerveModuleIO {
                     SwerveConfig.ANGLE_kI,
                     SwerveConfig.ANGLE_kD
                 )
+                //Only for kS, hence the other values are 0.
+                .apply(new FeedForwardConfig()
+                    .kV(0.0)
+                    .kA(0.0)
+                    .kS(SwerveConfig.ANGLE_kS) 
+                )
+                
             ),
             ResetMode.kNoResetSafeParameters,
             PersistMode.kNoPersistParameters);

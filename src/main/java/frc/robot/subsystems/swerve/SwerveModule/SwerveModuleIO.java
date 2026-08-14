@@ -28,7 +28,9 @@ public interface SwerveModuleIO {
     void setDesiredState(SwerveModuleState state);
     void setDriveMotorVoltage(Voltage voltage);
     Rotation2d getAbsoluteAngle();
+    Rotation2d getAdjustedAbsoluteAngle();
     RelativeEncoder getRelativeEncoder();
     double getAppliedOutput();
     void setAzimuth(Rotation2d angle);
+
 }

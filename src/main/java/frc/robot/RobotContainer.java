@@ -195,6 +195,11 @@ public class RobotContainer {
             new RunCommand(()-> swerveDrive.lockWheels(), swerveDrive)
         );
 
+        //Only Works in Test Mode, locks forward.
+        new JoystickButton(driverJoyStick, Constants.Controls.BTN_TEST_MODE_WHEEL_LOCK).whileTrue(
+            new RunCommand(()-> superState.toggleTestingWheelLock(), swerveDrive)
+        );
+
         // SysId characterization routines
         new SysIdBindings(driverJoyStick, swerveDrive, flywheel, intake);
     }

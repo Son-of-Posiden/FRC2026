@@ -80,4 +80,8 @@ public class SwerveModuleIOSim implements SwerveModuleIO {
     public void setAzimuth(Rotation2d angle) {
         
     }
+
+    public Rotation2d getAdjustedAbsoluteAngle() {
+        return simAbsoluteAngle;
+    }
 }

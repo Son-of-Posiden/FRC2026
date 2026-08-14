@@ -15,12 +15,13 @@ public final class Constants {
         public static final int BTN_INTAKE = 3;
         public static final int BTN_SPIT = 4;
         public static final int BTN_SYSID_RUN = 5;
+        public static final int BTN_TEST_MODE_WHEEL_LOCK = 8;
         public static final int BTN_LOCK_WHEELS = 14;
         public static final int BTN_RESET_GYRO = 15;
         public static final int BTN_TOGGLE_TURRET_LOCK = 16;
 
         // Joystick deadband for angle-only control (e.g. rotation stick ring)
-        public static final double ANGLE_JOYSTICK_DEADBAND = 0.5;
+        public static final double ANGLE_JOYSTICK_DEADBAND = 0.6;
         public static final double Y_DEADBAND = 0.2;
     
         // PID values for heading hold (used for snapping or rotating to angle)
@@ -137,9 +138,10 @@ public final class Constants {
         0.00027
          */
     
-        public static final double ANGLE_kP = 3.0;
-        public static final double ANGLE_kI = 0.0;
+        public static final double ANGLE_kP = 5.5;
+        public static final double ANGLE_kI = 0.0; //For Some reason kI doesn't work, as it causes strange lagging in one wheel at a time
         public static final double ANGLE_kD = 0.0;
+        public static final double ANGLE_kS = 0.3; //0.405 works but noisy, 0.2 has a degree off. kS is how it reaches its goal without kI. Effective friction isn't constant, but close.
 
     }
   

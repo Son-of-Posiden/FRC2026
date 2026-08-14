@@ -53,6 +53,10 @@ public class SwerveModule {
         return io.getAppliedOutput();
     }
 
+    public Rotation2d getAdjustedAbsoluteAngle() {
+        return io.getAdjustedAbsoluteAngle();
+    }
+
     public SwerveModuleState getState() {
         return new SwerveModuleState(
             inputs.driveVelocityMetersPerSecond,

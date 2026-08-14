@@ -47,7 +47,7 @@ public class SuperStateSubsystem extends SubsystemBase {
 
   private double phaseSeconds = 0.0;
   private boolean phaseState = false;
-    public boolean isTurretLocked = false;
+    public boolean isTurretLocked, isWheelsLocked = false;
 
   private final double flywheelIdleRPM = 0;
 
@@ -223,5 +223,16 @@ public class SuperStateSubsystem extends SubsystemBase {
       } else {
           isTurretLocked = true;
       }
+  }
+  //Only works in test mode, locks forward.
+  public void toggleTestingWheelLock() {
+    if (isWheelsLocked) {
+          isWheelsLocked = false;
+      } else {
+          isWheelsLocked = true;
+      }
+  }
+  public boolean getTestingWheelsLocked() {
+    return isWheelsLocked;
   }
 }
