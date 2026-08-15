@@ -33,17 +33,17 @@ public class SysIdSequence extends SequentialCommandGroup {
     DoubleSupplier motorOutput, 
     double voltageRampRatePerSecond, 
     double voltageStepRate, 
-    double timeoutSeconds,
+    double quasistaticTimeout,
+    double dynamicTimeout,
     Subsystem subsystem) {
-
-    // Add your commands in the addCommands() call, e.g.
+    // This needs to be tested
     sysIdRoutine =
             new SysIdRoutine(
                 // Empty config defaults to 1 volt/second ramp rate and 7 volt step voltage.
                 new SysIdRoutine.Config(
                   VoltsPerMeterPerSecond.of(voltageRampRatePerSecond),
                   Volts.of(voltageStepRate),
-                  Time.ofRelativeUnits(timeoutSeconds, Seconds)
+                  Time.ofRelativeUnits(quasistaticTimeout + dynamicTimeout, Seconds)
                 ),
                 new SysIdRoutine.Mechanism(
                     // Tell SysId how to plumb the driving voltage to the motor(s).
@@ -66,10 +66,13 @@ public class SysIdSequence extends SequentialCommandGroup {
     
     // addCommands(new FooCommand(), new BarCommand());
     addCommands(
-      sysIdRoutine.quasistatic(SysIdRoutine.Direction.kForward),
-      sysIdRoutine.quasistatic(SysIdRoutine.Direction.kReverse),
-      sysIdRoutine.dynamic(SysIdRoutine.Direction.kForward),
-      sysIdRoutine.dynamic(SysIdRoutine.Direction.kReverse)
+      sysIdRoutine.quasistatic(SysIdRoutine.Direction.kForward).withTimeout(quasistaticTimeout),
+      new WaitCommand(3),
+      sysIdRoutine.quasistatic(SysIdRoutine.Direction.kReverse.withTimeout(quasistaticTimeout)),
+      new WaitCommand(3),
+      sysIdRoutine.dynamic(SysIdRoutine.Direction.kForward).withTimeout(dynamicTimeout),
+      new WaitCommand(3),
+      sysIdRoutine.dynamic(SysIdRoutine.Direction.kReverse).withTimeout(dynamicTimeout)
     );
   }
 }
