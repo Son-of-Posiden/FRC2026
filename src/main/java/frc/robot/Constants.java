@@ -1,7 +1,15 @@
 package frc.robot;
 
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.Map;
+
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
+import edu.wpi.first.math.interpolation.Interpolator;
+import edu.wpi.first.math.interpolation.InverseInterpolator;
 import edu.wpi.first.math.util.Units;
 import frc.robot.subsystems.swerve.SwerveModule.SwerveModuleConstants;
 
@@ -36,6 +44,22 @@ public final class Constants {
 
         public static final double ballSpeedMetersPerSecond = 1.5; //Lower = more correction, higher = less
         public static final double firingTimeSeconds = 5; //Needs to be set
+
+        
+        
+        private final double[] shooterKey = {1.25, 2.25, 3.0, 4.0, 5.0, 5.5, 6.0};
+        private final double[] shooterValue = {3100.0, 3600.0, 3950.0, 4500.0, 5200.0, 5450.0, 5900.0};
+        final InterpolatingDoubleTreeMap shooterLookupTable = new InterpolatingDoubleTreeMap();
+
+        InterpolatingDoubleTreeMap getShooterTable() {
+
+            for (int i = 0; shooterKey.length > i; i++) {
+                shooterLookupTable.put(shooterKey[i], shooterValue[i]);
+            }
+
+            return shooterLookupTable;
+        }
+    
     }
 
     public static final class Turret {
